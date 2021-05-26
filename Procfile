@@ -1,3 +1,3 @@
-web: pipenv run python sxm.py -e x x
+web: python sxm.py -e x x
 
-worker: pipenv run python sxm.py -e x x
+worker: python sxm.py -e x x
