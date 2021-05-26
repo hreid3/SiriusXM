@@ -5,6 +5,7 @@ import urllib.parse
 import json
 import time, datetime
 import sys
+import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 class SiriusXM:
@@ -25,7 +26,7 @@ class SiriusXM:
         print('{} <SiriusXM>: {}'.format(datetime.datetime.now().strftime('%d.%b %Y %H:%M:%S'), x))
 
     def is_logged_in(self):
-        return 'SXMAUTH' in self.session.cookies
+        return 'SXMAUTHNEW' in self.session.cookies
 
     def is_session_authenticated(self):
         return 'AWSELB' in self.session.cookies and 'JSESSIONID' in self.session.cookies
@@ -215,12 +216,12 @@ class SiriusXM:
         if res.status_code != 200:
             self.log('Received status code {} on playlist variant retrieval'.format(res.status_code))
             return None
-        
+
         for x in res.text.split('\n'):
             if x.rstrip().endswith('.m3u8'):
                 # first variant should be 256k one
                 return '{}/{}'.format(url.rsplit('/', 1)[0], x.rstrip())
-        
+
         return None
 
     def get_playlist(self, name, use_cache=True):
@@ -277,7 +278,7 @@ class SiriusXM:
             return None
 
         return res.content
-    
+
     def get_channels(self):
         # download channel list if necessary
         if not self.channels:
@@ -355,12 +356,18 @@ if __name__ == '__main__':
     parser.add_argument('password')
     parser.add_argument('-l', '--list', required=False, action='store_true', default=False)
     parser.add_argument('-p', '--port', required=False, default=9999, type=int)
+    parser.add_argument('-e', '--env',  required=False, action='store_true', default=False)
     args = vars(parser.parse_args())
-    
+    if args['env']:
+        if "SXM_USER" in os.environ:
+            args['username'] = os.environ.get('SXM_USER')
+        if "SXM_PASS" in os.environ:
+            args['password'] = os.environ.get('SXM_PASS')
+
     sxm = SiriusXM(args['username'], args['password'])
     if args['list']:
         channels = list(sorted(sxm.get_channels(), key=lambda x: (not x.get('isFavorite', False), int(x.get('siriusChannelNumber', 9999)))))
-        
+
         l1 = max(len(x.get('channelId', '')) for x in channels)
         l2 = max(len(str(x.get('siriusChannelNumber', 0))) for x in channels)
         l3 = max(len(x.get('name', '')) for x in channels)
