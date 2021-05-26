@@ -363,6 +363,8 @@ if __name__ == '__main__':
             args['username'] = os.environ.get('SXM_USER')
         if "SXM_PASS" in os.environ:
             args['password'] = os.environ.get('SXM_PASS')
+        if "PORT" in os.environ:
+            args['port'] = int(os.environ.get('PORT'))
 
     sxm = SiriusXM(args['username'], args['password'])
     if args['list']:
