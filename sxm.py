@@ -198,7 +198,7 @@ class SiriusXM:
             self.log('Error parsing json response for playlist')
             return None
         for playlist_info in playlists:
-            if playlist_info['size'] == 'LARGE':
+            if playlist_info['size'] == 'SMALL': # Changed
                 playlist_url = playlist_info['url'].replace('%Live_Primary_HLS%', self.LIVE_PRIMARY_HLS)
                 self.playlists[channel_id] = self.get_playlist_variant_url(playlist_url)
                 return self.playlists[channel_id]
@@ -216,9 +216,8 @@ class SiriusXM:
         if res.status_code != 200:
             self.log('Received status code {} on playlist variant retrieval'.format(res.status_code))
             return None
-
         for x in res.text.split('\n'):
-            if x.rstrip().endswith('.m3u8'):
+            if x.rstrip().endswith('.m3u8') and "256k" in x: # Changed
                 # first variant should be 256k one
                 return '{}/{}'.format(url.rsplit('/', 1)[0], x.rstrip())
 
@@ -249,7 +248,8 @@ class SiriusXM:
         # add base path to segments
         base_url = url.rsplit('/', 1)[0]
         base_path = base_url[8:].split('/', 1)[1]
-        lines = res.text.split('\n')
+        tempText = res.text.replace('#EXT-X-ALLOW-CACHE:NO', '#EXT-X-ALLOW-CACHE:YES')
+        lines = tempText.split('\n')
         for x in range(len(lines)):
             if lines[x].rstrip().endswith('.aac'):
                 lines[x] = '{}/{}'.format(base_path, lines[x])
